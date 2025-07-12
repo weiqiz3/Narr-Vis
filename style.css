@@ -1,0 +1,22 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+#nav {
+  margin-top: 20px;
+}
+
+#vis {
+  width: 960px;
+  height: 600px;
+  margin: 20px auto;
+}
+
+button {
+  padding: 8px 12px;
+  margin: 5px;
+}
