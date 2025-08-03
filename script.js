@@ -1,3 +1,4 @@
+let scene = 0;
 let data;
 
 const scenes = [
@@ -9,33 +10,41 @@ const scenes = [
 
 d3.csv("vgsales_cleaned.csv").then(dataset => {
   data = dataset;
-  renderAllScenes();
+  renderScene();
 });
 
-function renderAllScenes() {
-  d3.select("#vis").html("");
-
-  scenes.forEach(sceneObj => {
-    const section = d3.select("#vis")
-      .append("div")
-      .attr("class", "scene-section")
-      .style("margin-bottom", "60px");
-
-    section.append("h2").text(sceneObj.title);
-
-    const container = section.append("div").attr("class", "scene-viz");
-
-    sceneObj.render(container);
-  });
+function renderScene() {
+  d3.select("#scene-title")
+  .html(`<h2>${scenes[scene].title}</h2>`);
+  d3.select("#vis").html(""); // Clear container
+  scenes[scene].render();
 }
+
+d3.select("#next").on("click", () => {
+  if (scene < scenes.length - 1) scene++;
+  renderScene();
+});
+
+d3.select("#prev").on("click", () => {
+  if (scene > 0) scene--;
+  renderScene();
+});
 
 // ------------------------
 // Scene 1: Top 10 Games
 // ------------------------
-function scene1(container) {
-  const svg = container.append("svg")
-    .attr("width", 960)
-    .attr("height", 600);
+function scene1() {
+  const margin = { top: 40, right: 40, bottom: 40, left: 240 };
+  const width = 960 - margin.left - margin.right;
+  const height = 600 - margin.top - margin.bottom;
+
+  const svg = d3.select("#vis")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+
+  const g = svg.append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
 
   const topGames = data
     .sort((a, b) => d3.descending(+a.Global_Sales, +b.Global_Sales))
@@ -43,40 +52,43 @@ function scene1(container) {
 
   const x = d3.scaleLinear()
     .domain([0, d3.max(topGames, d => +d.Global_Sales)])
-    .range([0, 800]);
+    .range([0, width]);
 
   const y = d3.scaleBand()
     .domain(topGames.map(d => d.Name))
-    .range([0, 500])
+    .range([0, height])
     .padding(0.1);
 
-  svg.selectAll("rect")
+  // Bars
+  g.selectAll("rect")
     .data(topGames)
     .enter()
     .append("rect")
-    .attr("x", 100)
+    .attr("x", 0)                  // start from 0 inside group (left edge)
     .attr("y", d => y(d.Name))
     .attr("width", d => x(+d.Global_Sales))
     .attr("height", y.bandwidth())
     .attr("fill", "#69b3a2");
 
-  svg.selectAll("text")
+  // Labels
+  g.selectAll("text")
     .data(topGames)
     .enter()
     .append("text")
-    .attr("x", 95)
+    .attr("x", -15)                // position labels *left* of bars, inside margin
     .attr("y", d => y(d.Name) + y.bandwidth() / 2)
     .attr("text-anchor", "end")
     .attr("dominant-baseline", "middle")
     .text(d => d.Name);
 }
 
+
 // ------------------------
 // Scene 2: Genre Trends
 // ------------------------
-function scene2(container) {
+function scene2() {
   d3.csv("genre_by_year.csv").then(genreData => {
-    const svg = container.append("svg")
+    const svg = d3.select("#vis").append("svg")
       .attr("width", 960)
       .attr("height", 600);
 
@@ -147,9 +159,9 @@ function scene2(container) {
 // ------------------------
 // Scene 3: Genre by Region
 // ------------------------
-function scene3(container) {
+function scene3() {
   d3.csv("genre_by_region.csv").then(regionData => {
-    const svg = container.append("svg")
+    const svg = d3.select("#vis").append("svg")
       .attr("width", 960)
       .attr("height", 600);
 
@@ -204,7 +216,6 @@ function scene3(container) {
 
     const legend = svg.append("g")
       .attr("transform", `translate(${width - 100},${margin.top})`);
-
     subgroups.forEach((region, i) => {
       const yOffset = i * 20;
       legend.append("rect")
@@ -222,7 +233,9 @@ function scene3(container) {
 // ------------------------
 // Scene 4: Exploration
 // ------------------------
-function scene4(container) {
+function scene4() {
+  const container = d3.select("#vis");
+  
   container.append("label")
     .text("Filter by Genre: ")
     .style("margin-right", "8px");
