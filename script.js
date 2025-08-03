@@ -1,4 +1,3 @@
-let scene = 0;
 let data;
 
 const scenes = [
@@ -10,30 +9,31 @@ const scenes = [
 
 d3.csv("vgsales_cleaned.csv").then(dataset => {
   data = dataset;
-  renderScene();
+  renderAllScenes();
 });
 
-function renderScene() {
-  d3.select("#scene-title").text(scenes[scene].title);
-  d3.select("#vis").html(""); // Clear container
-  scenes[scene].render();
+function renderAllScenes() {
+  d3.select("#vis").html("");
+
+  scenes.forEach(sceneObj => {
+    const section = d3.select("#vis")
+      .append("div")
+      .attr("class", "scene-section")
+      .style("margin-bottom", "60px");
+
+    section.append("h2").text(sceneObj.title);
+
+    const container = section.append("div").attr("class", "scene-viz");
+
+    sceneObj.render(container);
+  });
 }
-
-d3.select("#next").on("click", () => {
-  if (scene < scenes.length - 1) scene++;
-  renderScene();
-});
-
-d3.select("#prev").on("click", () => {
-  if (scene > 0) scene--;
-  renderScene();
-});
 
 // ------------------------
 // Scene 1: Top 10 Games
 // ------------------------
-function scene1() {
-  const svg = d3.select("#vis").append("svg")
+function scene1(container) {
+  const svg = container.append("svg")
     .attr("width", 960)
     .attr("height", 600);
 
@@ -74,9 +74,9 @@ function scene1() {
 // ------------------------
 // Scene 2: Genre Trends
 // ------------------------
-function scene2() {
+function scene2(container) {
   d3.csv("genre_by_year.csv").then(genreData => {
-    const svg = d3.select("#vis").append("svg")
+    const svg = container.append("svg")
       .attr("width", 960)
       .attr("height", 600);
 
@@ -147,9 +147,9 @@ function scene2() {
 // ------------------------
 // Scene 3: Genre by Region
 // ------------------------
-function scene3() {
+function scene3(container) {
   d3.csv("genre_by_region.csv").then(regionData => {
-    const svg = d3.select("#vis").append("svg")
+    const svg = container.append("svg")
       .attr("width", 960)
       .attr("height", 600);
 
@@ -204,6 +204,7 @@ function scene3() {
 
     const legend = svg.append("g")
       .attr("transform", `translate(${width - 100},${margin.top})`);
+
     subgroups.forEach((region, i) => {
       const yOffset = i * 20;
       legend.append("rect")
@@ -221,9 +222,7 @@ function scene3() {
 // ------------------------
 // Scene 4: Exploration
 // ------------------------
-function scene4() {
-  const container = d3.select("#vis");
-  
+function scene4(container) {
   container.append("label")
     .text("Filter by Genre: ")
     .style("margin-right", "8px");
